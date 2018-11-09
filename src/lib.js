@@ -16,7 +16,7 @@ const createPrompt = (input) => {
     //Get the number of (questions/choices)
     const getValue = (input, name, defaultVal) => {
         //If the input is invalid return the default value
-        return (input === undefined) ? defaultVal : (input[name] === undefined) ? defaultVal : input[name]}
+        return (input === undefined) ? defaultVal : (input[name] === undefined) ? defaultVal : parseInt(input[name])}
     //Create a prompt based on number of questions and choices
     const getPrompt = (numQuestions, numChoices) => {
         return Array.apply(null, {length: numQuestions + numQuestions * numChoices}).map((cur,index) => {
@@ -75,6 +75,7 @@ const readFile = fileName => {
         })
     })
 }
+
 const writeFile  = (fileName,data) => {
     return new Promise((resolve, reject) => {
         fs.writeFile(fileName,data,err => {

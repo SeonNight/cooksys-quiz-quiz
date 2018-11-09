@@ -32,19 +32,46 @@ const askForQuestions = [
   }
 ]
 
+//Create a quiz
 const createQuiz = title =>
   prompt(askForQuestions)
-    .then(answer =>
-      // TODO finish createQuiz logic
-      console.log(answer)
-    )
+    .then(answer => createPrompt(answer))
+    .then(createdPrompt => prompt(createdPrompt)
+      .then(inputedQuestions => createQuestions(inputedQuestions))
+      .then(questions => JSON.stringify(questions,null,2))
+      .then(info => writeFile(title,info)))
     .catch(err => console.log('Error creating the quiz.', err))
 
-// const takeQuiz = (title, output) =>
-// TODO implement takeQuiz
+//Take a quiz and put answeres in outputfile
+const takeQuiz = (title, output) => 
+  readFile(title)
+    .then(data => JSON.parse(data))
+    .then(quiz => prompt(quiz)
+      .then(answers => JSON.stringify(answers,null,2))
+      .then(info => writeFile(output,info)))
+    .catch(err => console.log('Error while taking Quiz.', err))
 
-// const takeRandomQuiz = (quizes, output, n) =>
-// TODO implement takeRandomQuiz
+    /*
+    return new Promise((resolve, reject) => {
+        fs.readFile(fileName,(err, data) => {
+            if(err) {
+                reject(err)
+            } else {
+                resolve(data)
+            }
+        })
+    }) */
+
+const combineQuizes = (quizes) => {
+  Promise.map(quizes, fileName => readFile(fileName))
+}
+
+//Fuse all the quizes together and return a random quiz from all,
+// then put answers into output
+const takeRandomQuiz = (quizes, output, n) =>
+  combineQuizes(quizes)
+    .then(combineTest => console.log(combineTest))
+    .catch(err => console.log('Error while taking random Quiz.', err))
 
 
 //REMEMBER: return a promise or command line will just exit, look at vorpal docs
@@ -55,7 +82,6 @@ cli
     'Creates a new quiz and saves it to the given fileName'
   )
   .action(function (input, callback) {
-    // TODO update create command for correct functionality
     return createQuiz(input.fileName)
   })
 
@@ -65,7 +91,7 @@ cli
     'Loads a quiz and saves the users answers to the given outputFile'
   )
   .action(function (input, callback) {
-    // TODO implement functionality for taking a quiz
+    return takeQuiz(input.fileName,input.outputFile)
   })
 
 cli
@@ -76,7 +102,7 @@ cli
       ' Then, saves the users answers to the given outputFile'
   )
   .action(function (input, callback) {
-    // TODO implement the functionality for taking a random quiz
+    return takeRandomQuiz(input.fileNames,input.outputFile,2)
   })
 
 cli.delimiter(cli.chalk['yellow']('quizler>')).show()
