@@ -18,7 +18,7 @@ const askForQuestions = [
     message: 'How many questions do you want in your quiz?',
     validate: input => {
       const pass = input.match(/^[1-9]{1}$|^[1-9]{1}[0-9]{1}$|^100$/)
-      return pass ? true : 'Please enter a valid number!'
+      return pass ? true : 'Please enter a valid number! (1-100)'
     }
   },
   {
@@ -27,7 +27,7 @@ const askForQuestions = [
     message: 'How many choices should each question have?',
     validate: input => {
       const pass = input.match(/^(?:[2-4]|0[2-4]|4)$/)
-      return pass ? true : 'Please enter a valid number!'
+      return pass ? true : 'Please enter a valid number! (2-4)'
     }
   }
 ]
@@ -45,6 +45,9 @@ const createQuiz = title =>
 
 // const takeRandomQuiz = (quizes, output, n) =>
 // TODO implement takeRandomQuiz
+
+
+//REMEMBER: return a promise or command line will just exit, look at vorpal docs
 
 cli
   .command(
