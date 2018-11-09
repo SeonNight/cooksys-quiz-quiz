@@ -38,39 +38,24 @@ const createQuiz = title =>
     .then(answer => createPrompt(answer))
     .then(createdPrompt => prompt(createdPrompt)
       .then(inputedQuestions => createQuestions(inputedQuestions))
-      .then(questions => JSON.stringify(questions,null,2))
-      .then(info => writeFile(title,info)))
+      .then(questions => writeFile(title,questions)))
     .catch(err => console.log('Error creating the quiz.', err))
 
 //Take a quiz and put answeres in outputfile
 const takeQuiz = (title, output) => 
   readFile(title)
-    .then(data => JSON.parse(data))
     .then(quiz => prompt(quiz)
-      .then(answers => JSON.stringify(answers,null,2))
-      .then(info => writeFile(output,info)))
+      .then(answers => writeFile(output,answers)))
     .catch(err => console.log('Error while taking Quiz.', err))
-
-    /*
-    return new Promise((resolve, reject) => {
-        fs.readFile(fileName,(err, data) => {
-            if(err) {
-                reject(err)
-            } else {
-                resolve(data)
-            }
-        })
-    }) */
-
-const combineQuizes = (quizes) => {
-  Promise.map(quizes, fileName => readFile(fileName))
-}
 
 //Fuse all the quizes together and return a random quiz from all,
 // then put answers into output
 const takeRandomQuiz = (quizes, output, n) =>
-  combineQuizes(quizes)
-    .then(combineTest => console.log(combineTest))
+  Promise.all(quizes.map(fileName => readFile(fileName)))
+    .then(values => [].concat.apply([], values))
+    .then(combineTest => chooseRandom(combineTest))
+    .then(randomTest => prompt(randomTest)
+      .then(answers => writeFile(output,answers)))
     .catch(err => console.log('Error while taking random Quiz.', err))
 
 

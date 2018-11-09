@@ -70,7 +70,7 @@ const readFile = fileName => {
             if(err) {
                 reject(err)
             } else {
-                resolve(data)
+                resolve(JSON.parse(data))
             }
         })
     })
@@ -78,7 +78,7 @@ const readFile = fileName => {
 
 const writeFile  = (fileName,data) => {
     return new Promise((resolve, reject) => {
-        fs.writeFile(fileName,data,err => {
+        fs.writeFile(fileName,JSON.stringify(data,null,2),err => {
             if(err) {
                 reject(err)
             } else {
