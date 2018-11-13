@@ -163,7 +163,8 @@ const gradeQuiz = (takenQuiz, quizAnswers) => {
     }
     //Return grade
     console.log("Grade: " + parseInt(sum/count * 100))
-    return (parseInt(sum/count * 100))
+    return parseInt(sum/count * 100)
 }
+
 //Export above functions
 export {chooseRandom, createPrompt, createQuestions, readFile, writeFile, gradeQuiz, readFileExtra}

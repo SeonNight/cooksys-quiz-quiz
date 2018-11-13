@@ -40,7 +40,6 @@ const createQuiz = title =>
     .then(answer => createPrompt(answer))
     .then(createdPrompt => prompt(createdPrompt)
       .then(inputedQuestions => createQuestions(inputedQuestions))
-//      .then(questions => writeFile(title,questions)))
       .then(questionsAndAnswers => {
         writeFile(title,questionsAndAnswers[0])
         writeFile(title + '-answers', questionsAndAnswers[1])}))
@@ -67,13 +66,12 @@ const takeRandomQuiz = (quizes, output, n, getGrade) =>
 
 
 //Grade taken test
-const gradeTakenQuiz = (takenQuiz, quizes) => {
+const gradeTakenQuiz = (takenQuiz, quizes) =>
   Promise.all(quizes.map(fileName => readFile(fileName + '-answers')))
     .then(values => [].concat.apply([], values))
     .then(answers => readFileExtra(takenQuiz,answers))
     .then(info => gradeQuiz(info[0],info[1]))
     .catch(err => console.log('Error while grading Quiz.', err))
-}
 
 cli
   .command(
