@@ -1,0 +1,38 @@
+[
+  {
+    "type": "list",
+    "name": "question-54458223",
+    "message": "a",
+    "choices": [
+      "g",
+      "a"
+    ]
+  },
+  {
+    "type": "list",
+    "name": "question-79840534",
+    "message": "2",
+    "choices": [
+      "f",
+      "s"
+    ]
+  },
+  {
+    "type": "list",
+    "name": "question-38568050",
+    "message": "2",
+    "choices": [
+      "41",
+      "5"
+    ]
+  },
+  {
+    "type": "list",
+    "name": "question-82778528",
+    "message": "5",
+    "choices": [
+      "2",
+      "5"
+    ]
+  }
+]

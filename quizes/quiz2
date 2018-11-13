@@ -1,0 +1,35 @@
+[
+  {
+    "type": "list",
+    "name": "question-_il4ja6fv8",
+    "message": "Hello",
+    "choices": [
+      "What you do",
+      "okay this is where",
+      "but it's fine",
+      "this can happen"
+    ]
+  },
+  {
+    "type": "list",
+    "name": "question-_4svn5ycy1",
+    "message": "but oh weel it s okay",
+    "choices": [
+      "this",
+      "ida",
+      "w2if",
+      ""
+    ]
+  },
+  {
+    "type": "list",
+    "name": "question-_k24zz79ni",
+    "message": "3",
+    "choices": [
+      "2",
+      "24",
+      "1",
+      "51"
+    ]
+  }
+]

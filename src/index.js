@@ -6,7 +6,9 @@ import {
   writeFile,
   chooseRandom,
   createPrompt,
-  createQuestions
+  createQuestions,
+  gradeQuiz,
+  readFileExtra
 } from './lib'
 
 const cli = vorpal()
@@ -38,28 +40,38 @@ const createQuiz = title =>
     .then(answer => createPrompt(answer))
     .then(createdPrompt => prompt(createdPrompt)
       .then(inputedQuestions => createQuestions(inputedQuestions))
-      .then(questions => writeFile(title,questions)))
+//      .then(questions => writeFile(title,questions)))
+      .then(questionsAndAnswers => {
+        writeFile(title,questionsAndAnswers[0])
+        writeFile(title + '-answers', questionsAndAnswers[1])}))
     .catch(err => console.log('Error creating the quiz.', err))
 
 //Take a quiz and put answeres in outputfile
-const takeQuiz = (title, output) => 
+const takeQuiz = (title, output, getGrade) => 
   readFile(title)
     .then(quiz => prompt(quiz)
       .then(answers => writeFile(output,answers)))
     .catch(err => console.log('Error while taking Quiz.', err))
 
-//Fuse all the quizes together and return a random quiz from all,
-// then put answers into output
-const takeRandomQuiz = (quizes, output, n) =>
+//Fuse all the quizes together and return a random quiz from all file,
+// then put answers into output file
+const takeRandomQuiz = (quizes, output, n, getGrade) =>
   Promise.all(quizes.map(fileName => readFile(fileName)))
     .then(values => [].concat.apply([], values))
-    .then(combineTest => chooseRandom(combineTest))
+    .then(combineTest => chooseRandom(combineTest,n))
     .then(randomTest => prompt(randomTest)
       .then(answers => writeFile(output,answers)))
     .catch(err => console.log('Error while taking random Quiz.', err))
 
 
-//REMEMBER: return a promise or command line will just exit, look at vorpal docs
+//Grade taken test
+const gradeTakenQuiz = (takenQuiz, quizes, getGrade) => {
+  Promise.all(quizes.map(fileName => readFile(fileName + '-answers')))
+    .then(values => [].concat.apply([], values))
+    .then(answers => readFileExtra(takenQuiz,answers))
+    .then(info => gradeQuiz(info[0],info[1],getGrade))
+    .catch(err => console.log('Error while grading Quiz.', err))
+}
 
 cli
   .command(
@@ -75,8 +87,9 @@ cli
     'take <fileName> <outputFile>',
     'Loads a quiz and saves the users answers to the given outputFile'
   )
+  //.option('-g, --grade', 'Grade quiz after completion')
   .action(function (input, callback) {
-    return takeQuiz(input.fileName,input.outputFile)
+    return takeQuiz(input.fileName,input.outputFile,input.options.grade)
   })
 
 cli
@@ -86,8 +99,20 @@ cli
       ' multiple quizes and selects a random number of questions from each quiz.' +
       ' Then, saves the users answers to the given outputFile'
   )
+  //.option('-g, --grade', 'Grade quiz after completion')
+  .option('-q, --questions <number>', 'Input the number of questions you want in the quiz')
   .action(function (input, callback) {
-    return takeRandomQuiz(input.fileNames,input.outputFile,2)
+    return takeRandomQuiz(input.fileNames,input.outputFile,input.options.questions,input.options.grade)
   })
 
-cli.delimiter(cli.chalk['yellow']('quizler>')).show()
+
+  cli
+  .command(
+    'grade <fileName> <quizNames...>',
+    'Grades quiz that was taken and returns grade'
+  )
+  .action(function (input, callback) {
+    return gradeTakenQuiz(input.fileName,input.quizNames,true)
+  })
+
+cli.delimiter(cli.chalk['yellow']('<quizler>')).show()

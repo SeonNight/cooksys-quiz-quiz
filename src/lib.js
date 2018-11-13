@@ -13,23 +13,46 @@ const chooseRandom = (array, numItems) => {
 
 //Create prompt using Json object input
 const createPrompt = (input) => {
+    //Get random id for questions
+    const getRand = () => {
+        return Math.random().toString(36).substr(2, 9);
+    }
     //Get the number of (questions/choices)
     const getValue = (input, name, defaultVal) => {
         //If the input is invalid return the default value
-        return (input === undefined) ? defaultVal : (input[name] === undefined) ? defaultVal : parseInt(input[name])}
+        return (input === undefined) ? defaultVal : (input[name] === undefined) ? defaultVal : parseInt(input[name])
+    }
+    //Create the choices prompt
+    const getChoices = (id,numChoices) => {
+        return Array.apply(null, {length: numChoices}).map((cur,index) => {return {
+            type: 'input',
+            name: `question-${id}-choice-${index+1}`,
+            message: `Enter answer choice ${index+1} for question ${id}`
+        }})
+    }
+    //Create the question prompt
+    const getQuestionsAndChoices = (id,numChoices) => {
+        return [{
+            type: 'input',
+            name: `question-${id}`,
+            message: `Enter question ${id}`
+        }].concat(getChoices(id,numChoices)).concat({
+            type: 'input',
+            name: `question-${id}-answer`,
+            message: `Enter which answer choice is correct for question ${id}`,
+            validate: input => {
+                const pass = input.match(new RegExp('^(?:[1-' + numChoices + ']|0[1-' + numChoices + ']|' + numChoices+')$'))
+                //const pass = input.match(/^(?:[1-4]|0[1-4]|4)$/)
+                return pass ? true : `Please enter a valid number! (1-${numChoices})`
+            }
+        })
+    }
     //Create a prompt based on number of questions and choices
     const getPrompt = (numQuestions, numChoices) => {
-        return Array.apply(null, {length: numQuestions + numQuestions * numChoices}).map((cur,index) => {
-            return (index % (numChoices + 1) === 0) ? ({
-                type: 'input',
-                name: `question-${Math.floor(index/(numChoices+1))+1}`,
-                message: `Enter question ${Math.floor(index/(numChoices+1))+1}`
-            }) : ({
-                type: 'input',
-                name: `question-${Math.floor(index/(numChoices+1))+1}-choice-${index%(numChoices+1)}`,
-                message: `Enter answer choice ${index%(numChoices+1)} for question ${Math.floor(index/(numChoices+1))+1}`
-            })
-        })}
+        return [].concat.apply([],Array.apply(null, {length: numQuestions}).map((cur,index) => {
+            return getQuestionsAndChoices(getRand(),numChoices)
+        }))
+    }
 
     //return created prompt
     return getPrompt(getValue(input, 'numQuestions', 1),getValue(input, 'numChoices', 2))
@@ -38,35 +61,52 @@ const createPrompt = (input) => {
 //Create questions using Json object input
 const createQuestions = (questions) => {
     //Get the questions
-    const getQuestions = (json) => {return Object.keys(json).filter(key=>!key.includes('choice'))}
+    const getQuestions = (json) => {return Object.keys(json).filter(key=>(!key.includes('choice') && !key.includes('answer')))}
     //Get the choices of question
-    const getChoices = (json, name) => {return Object.keys(json).filter(key => key.indexOf(name + '-choice-') == 0 ).map(key => json[key])}
-
+    const getChoices = (json, name) => {return Object.keys(json).filter(key => key.indexOf(name + '-choice-') == 0 ).map(key=>json[key])}
+    //Get answers
+    const getAnswers = (json) => {return Object.keys(json).filter(key=>key.includes('answer'))}
     //Create the json set
-    const getSet = (questionName,message,choices) => {
+    const getQuestionsAndChoicesSet = (questionName,message,choices) => {
         return {type: 'list',
             name: questionName,
             message: message,
             choices: choices
         }
     }
+    //Get an answer object
+    const getAnswerSet = (questionName, answer) => {
+        return {
+            [questionName]: answer
+        }
+    }
 
     //Get the list of questions and choices
     const getQuestionList = (json) => {
         return (json === undefined) ? [] : getQuestions(json).map((cur) =>{
-                return getSet(cur,json[cur],getChoices(json,cur))
+                return getQuestionsAndChoicesSet(cur,json[cur],getChoices(json,cur))
             })
     }
 
-    //Return questions
-    return getQuestionList(questions)
+    //Get a array of answers
+    const getAnswerList = (json) => {
+        return getAnswers(json).map((cur,ind) => {return getAnswerSet(cur.replace('-answer',''),json[cur.replace('-answer','-choice-')+json[cur]])})
+    }
+
+    //Get questions and answers
+    const getQuestionsAndAnswers = (json) => {
+        return [getQuestionList(json),getAnswerList(json)]
+    }
+
+    //Return questions and answers
+    return getQuestionsAndAnswers(questions)
 }
 
 import fs from 'fs'
 
 const readFile = fileName => {
     return new Promise((resolve, reject) => {
-        fs.readFile(fileName,(err, data) => {
+        fs.readFile('quizes/'+fileName,(err, data) => {
             if(err) {
                 reject(err)
             } else {
@@ -75,10 +115,20 @@ const readFile = fileName => {
         })
     })
 }
-
+const readFileExtra = (fileName, extraData) => {
+    return new Promise((resolve, reject) => {
+        fs.readFile('quizes/'+fileName,(err, data) => {
+            if(err) {
+                reject(err)
+            } else {
+                resolve([JSON.parse(data),extraData])
+            }
+        })
+    })
+}
 const writeFile  = (fileName,data) => {
     return new Promise((resolve, reject) => {
-        fs.writeFile(fileName,JSON.stringify(data,null,2),err => {
+        fs.writeFile('quizes/'+fileName,JSON.stringify(data,null,2),err => {
             if(err) {
                 reject(err)
             } else {
@@ -87,5 +137,30 @@ const writeFile  = (fileName,data) => {
         })
     })
 }
+
+const gradeQuiz = (takenQuiz, quizAnswers, gradeQuiz) => {
+        //if(gradeQuiz) {
+            let sum = 0;
+            let count = 0;
+            let quizAnswersConcat = quizAnswers.reduce(function(result, currentObject) {
+                for(var key in currentObject) {
+                    if (currentObject.hasOwnProperty(key)) {
+                        result[key] = currentObject[key];
+                    }
+                }
+                return result;
+            }, {})
+            for(let v of Object.keys(takenQuiz).map(key => takenQuiz[key] == quizAnswersConcat[key])) {
+                count++
+                if(v) {
+                    sum++
+                }
+            }
+            console.log("Grade: " + parseInt(sum/count * 100))
+            return (parseInt(sum/count * 100))
+        //} else {
+        //    return (-1)
+        //}
+}
 //Export above functions
-export {chooseRandom, createPrompt, createQuestions, readFile, writeFile}
+export {chooseRandom, createPrompt, createQuestions, readFile, writeFile, gradeQuiz, readFileExtra}
