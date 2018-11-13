@@ -115,6 +115,7 @@ const readFile = fileName => {
         })
     })
 }
+//Read file + passing extra data
 const readFileExtra = (fileName, extraData) => {
     return new Promise((resolve, reject) => {
         fs.readFile('quizes/'+fileName,(err, data) => {
@@ -138,29 +139,31 @@ const writeFile  = (fileName,data) => {
     })
 }
 
-const gradeQuiz = (takenQuiz, quizAnswers, gradeQuiz) => {
-        //if(gradeQuiz) {
-            let sum = 0;
-            let count = 0;
-            let quizAnswersConcat = quizAnswers.reduce(function(result, currentObject) {
-                for(var key in currentObject) {
-                    if (currentObject.hasOwnProperty(key)) {
-                        result[key] = currentObject[key];
-                    }
-                }
-                return result;
-            }, {})
-            for(let v of Object.keys(takenQuiz).map(key => takenQuiz[key] == quizAnswersConcat[key])) {
-                count++
-                if(v) {
-                    sum++
-                }
+//Grade quiz
+const gradeQuiz = (takenQuiz, quizAnswers) => {
+    //Whiche you got correct
+    let sum = 0;
+    //Total count
+    let count = 0;
+    //Turn quizAnswers into one object
+    let quizAnswersConcat = quizAnswers.reduce(function(result, currentObject) {
+        for(var key in currentObject) {
+            if (currentObject.hasOwnProperty(key)) {
+                result[key] = currentObject[key];
             }
-            console.log("Grade: " + parseInt(sum/count * 100))
-            return (parseInt(sum/count * 100))
-        //} else {
-        //    return (-1)
-        //}
+        }
+        return result;
+    }, {})
+    //Count which ones are correct
+    for(let v of Object.keys(takenQuiz).map(key => takenQuiz[key] == quizAnswersConcat[key])) {
+        count++
+        if(v) {
+            sum++
+        }
+    }
+    //Return grade
+    console.log("Grade: " + parseInt(sum/count * 100))
+    return (parseInt(sum/count * 100))
 }
 //Export above functions
 export {chooseRandom, createPrompt, createQuestions, readFile, writeFile, gradeQuiz, readFileExtra}

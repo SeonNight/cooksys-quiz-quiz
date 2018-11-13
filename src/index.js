@@ -51,6 +51,7 @@ const takeQuiz = (title, output, getGrade) =>
   readFile(title)
     .then(quiz => prompt(quiz)
       .then(answers => writeFile(output,answers)))
+    .then(info => {if(getGrade) return gradeTakenQuiz(output, [title])})
     .catch(err => console.log('Error while taking Quiz.', err))
 
 //Fuse all the quizes together and return a random quiz from all file,
@@ -61,15 +62,16 @@ const takeRandomQuiz = (quizes, output, n, getGrade) =>
     .then(combineTest => chooseRandom(combineTest,n))
     .then(randomTest => prompt(randomTest)
       .then(answers => writeFile(output,answers)))
+    .then(info => {if(getGrade) return gradeTakenQuiz(output, quizes)})
     .catch(err => console.log('Error while taking random Quiz.', err))
 
 
 //Grade taken test
-const gradeTakenQuiz = (takenQuiz, quizes, getGrade) => {
+const gradeTakenQuiz = (takenQuiz, quizes) => {
   Promise.all(quizes.map(fileName => readFile(fileName + '-answers')))
     .then(values => [].concat.apply([], values))
     .then(answers => readFileExtra(takenQuiz,answers))
-    .then(info => gradeQuiz(info[0],info[1],getGrade))
+    .then(info => gradeQuiz(info[0],info[1]))
     .catch(err => console.log('Error while grading Quiz.', err))
 }
 
@@ -87,7 +89,7 @@ cli
     'take <fileName> <outputFile>',
     'Loads a quiz and saves the users answers to the given outputFile'
   )
-  //.option('-g, --grade', 'Grade quiz after completion')
+  .option('-g, --grade', 'Grade quiz after completion')
   .action(function (input, callback) {
     return takeQuiz(input.fileName,input.outputFile,input.options.grade)
   })
@@ -99,7 +101,7 @@ cli
       ' multiple quizes and selects a random number of questions from each quiz.' +
       ' Then, saves the users answers to the given outputFile'
   )
-  //.option('-g, --grade', 'Grade quiz after completion')
+  .option('-g, --grade', 'Grade quiz after completion')
   .option('-q, --questions <number>', 'Input the number of questions you want in the quiz')
   .action(function (input, callback) {
     return takeRandomQuiz(input.fileNames,input.outputFile,input.options.questions,input.options.grade)
@@ -112,7 +114,7 @@ cli
     'Grades quiz that was taken and returns grade'
   )
   .action(function (input, callback) {
-    return gradeTakenQuiz(input.fileName,input.quizNames,true)
+    return gradeTakenQuiz(input.fileName,input.quizNames)
   })
 
 cli.delimiter(cli.chalk['yellow']('<quizler>')).show()
